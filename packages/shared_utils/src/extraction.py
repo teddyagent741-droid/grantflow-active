@@ -315,6 +315,14 @@ def _extract_chunks_from_result(result: ExtractionResult) -> list[str] | None:
     return result.chunks if result.chunks else None
 
 
+def _normalize_output_mime_type(input_mime_type: str, output_mime_type: str) -> str:
+    # Older kreuzberg versions may keep CSV as text/csv while returning markdown
+    # content. Normalize to the expected semantic output type.
+    if input_mime_type == "text/csv" and output_mime_type == "text/csv":
+        return "text/markdown"
+    return output_mime_type
+
+
 def classify_document_content(
     content: str, keywords: list[Keyword]
 ) -> tuple[str | None, list[str]]:
@@ -454,7 +462,11 @@ async def extract_file_content(
             extraction_duration_ms=round(extraction_duration * 1000, 2),
         )
 
-        return result.content, result.mime_type, chunks, metadata
+        normalized_mime_type = _normalize_output_mime_type(
+            input_mime_type=mime_type,
+            output_mime_type=result.mime_type,
+        )
+        return result.content, normalized_mime_type, chunks, metadata
     except KreuzbergError as e:
         extraction_duration = time.time() - start_time
         logger.warning(
