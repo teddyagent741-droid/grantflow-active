@@ -168,9 +168,14 @@ async def extract_and_process_content(
             enable_document_classification=True,
             language_hint="en",
         )
-        extraction_result = await extract_bytes(
-            content=clean_html.encode("utf-8"), mime_type="text/html", config=config
-        )
+        try:
+            extraction_result = await extract_bytes(
+                content=clean_html.encode("utf-8"), mime_type="text/html", config=config
+            )
+        except TypeError:
+            extraction_result = await extract_bytes(
+                clean_html.encode("utf-8"), "text/html", config=config
+            )
         md_out = (
             extraction_result.content
             if isinstance(extraction_result.content, str)
@@ -665,9 +670,14 @@ async def crawl_url(
             enable_document_classification=True,
             language_hint="en",
         )
-        extraction_result = await extract_bytes(
-            content=content.encode("utf-8"), mime_type="text/markdown", config=config
-        )
+        try:
+            extraction_result = await extract_bytes(
+                content=content.encode("utf-8"), mime_type="text/markdown", config=config
+            )
+        except TypeError:
+            extraction_result = await extract_bytes(
+                content.encode("utf-8"), "text/markdown", config=config
+            )
         chunks_content = (
             extraction_result.chunks
             if hasattr(extraction_result, "chunks") and extraction_result.chunks
