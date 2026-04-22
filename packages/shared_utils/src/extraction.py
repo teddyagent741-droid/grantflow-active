@@ -5,7 +5,6 @@ from kreuzberg import (
     ExtractionConfig,
     ExtractionResult,
     KreuzbergError,
-    PSMMode,
     TesseractConfig,
     TokenReductionConfig,
     extract_bytes,
@@ -262,7 +261,6 @@ def get_scientific_extraction_config(
 
     ocr_config = TesseractConfig(
         output_format="markdown",
-        psm=PSMMode.AUTO_ONLY,
         language="eng",
         tessedit_enable_dict_correction=True,
         language_model_ngram_on=False,
