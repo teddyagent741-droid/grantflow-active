@@ -10,6 +10,18 @@ from services.scraper.src.html_utils import download_page_html
 logger = get_logger(__name__)
 
 
+def _as_markdown_text(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    markdown_value = getattr(value, "markdown", None)
+    if isinstance(markdown_value, str):
+        return markdown_value
+    content_value = getattr(value, "content", None)
+    if isinstance(content_value, str):
+        return content_value
+    return str(value)
+
+
 async def download_and_save_pages(*, grants_info: list[tuple[str, str]]) -> None:
     urls = [url for url, _ in grants_info]
     html_pages = await gather(*(download_page_html(url=url) for url in urls))
@@ -24,16 +36,18 @@ async def download_and_save_pages(*, grants_info: list[tuple[str, str]]) -> None
 
 async def save_markdown_page(*, html: str, url: str, document_number: str) -> None:
     try:
-        markdown = convert(
-            html,
-            preprocessing=PreprocessingOptions(
-                enabled=True,
-            ),
+        markdown = _as_markdown_text(
+            convert(
+                html,
+                preprocessing=PreprocessingOptions(
+                    enabled=True,
+                ),
+            )
         )
     except TypeError:
         # Backward compatibility for html_to_markdown versions without
         # the `preprocessing` keyword argument.
-        markdown = convert(html)
+        markdown = _as_markdown_text(convert(html))
     formatted_markdown = text(markdown)
 
     await save_grant_page_content(url=url, document_number=document_number, content=formatted_markdown)
