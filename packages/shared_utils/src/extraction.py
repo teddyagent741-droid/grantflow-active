@@ -1,4 +1,5 @@
 import re
+from inspect import signature
 from typing import Any, Final, TypedDict, cast
 
 from kreuzberg import (
@@ -14,6 +15,19 @@ from packages.shared_utils.src.logger import get_logger
 from packages.shared_utils.src.stopwords import ACADEMIC_STOP_WORDS
 
 logger = get_logger(__name__)
+
+
+def _build_extraction_config_compat(config_kwargs: dict[str, Any]) -> ExtractionConfig:
+    """Build ExtractionConfig across kreuzberg API versions.
+
+    Some CI environments run older kreuzberg releases that reject newer kwargs
+    such as `chunk_content`. We filter kwargs against the runtime signature.
+    """
+    supported_params = set(signature(ExtractionConfig).parameters)
+    filtered_kwargs = {
+        key: value for key, value in config_kwargs.items() if key in supported_params
+    }
+    return ExtractionConfig(**filtered_kwargs)
 
 
 class Entity(TypedDict):
@@ -266,20 +280,22 @@ def get_scientific_extraction_config(
         language_model_ngram_on=False,
     )
 
-    return ExtractionConfig(
-        chunk_content=chunk_content,
-        max_chars=max_chars,
-        max_overlap=max_overlap,
-        token_reduction=token_reduction,
-        force_ocr=False,
-        ocr_config=ocr_config,
-        auto_detect_language=True,
-        extract_entities=enable_entity_extraction,
-        extract_keywords=enable_keyword_extraction,
-        keyword_count=10,
-        auto_detect_document_type=enable_document_classification,
-        document_classification_mode="text",
-        document_type_confidence_threshold=0.4,
+    return _build_extraction_config_compat(
+        {
+            "chunk_content": chunk_content,
+            "max_chars": max_chars,
+            "max_overlap": max_overlap,
+            "token_reduction": token_reduction,
+            "force_ocr": False,
+            "ocr_config": ocr_config,
+            "auto_detect_language": True,
+            "extract_entities": enable_entity_extraction,
+            "extract_keywords": enable_keyword_extraction,
+            "keyword_count": 10,
+            "auto_detect_document_type": enable_document_classification,
+            "document_classification_mode": "text",
+            "document_type_confidence_threshold": 0.4,
+        }
     )
 
 
