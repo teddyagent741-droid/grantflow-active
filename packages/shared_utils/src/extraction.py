@@ -394,6 +394,18 @@ async def extract_file_content(
 
     try:
         if (
+            mime_type in {"text/plain", "text/markdown", "text/csv"}
+            and not enable_chunking
+            and not enable_token_reduction
+        ):
+            text_content = content.decode("utf-8", errors="replace")
+            normalized_mime_type = _normalize_output_mime_type(
+                input_mime_type=mime_type,
+                output_mime_type=mime_type,
+            )
+            return text_content, normalized_mime_type, None, {}
+
+        if (
             enable_chunking
             or enable_token_reduction
             or enable_entity_extraction
