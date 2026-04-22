@@ -646,11 +646,10 @@ async def crawl_url(
             file_collect_duration_ms=round(file_collect_duration * 1000, 2),
         )
 
-        content = ""
-
     content_assembly_start = time.time()
-    for result in crawl_results:
-        content += "\n\n" + result["markdown_content"]
+    content = "\n\n".join(
+        result["markdown_content"] for result in crawl_results if result["markdown_content"]
+    )
     content_assembly_duration = time.time() - content_assembly_start
 
     logger.debug(
