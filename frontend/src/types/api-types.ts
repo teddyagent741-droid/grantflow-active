@@ -1587,6 +1587,21 @@ export namespace API {
 	export namespace Http200 {
 	export type ResponseBody = {
 	applications: {
+	compliance_summary?: {
+	checked_requirements: number;
+	high_count: number;
+	is_compliant: boolean;
+	low_count: number;
+	medium_count: number;
+	missing_items: {
+	requirement: string;
+	section_id: string;
+	section_title: string;
+	severity: "HIGH" | "LOW" | "MEDIUM";
+	}[];
+	missing_requirements: number;
+	severity?: "HIGH" | "LOW" | "MEDIUM" | null;
+	};
 	completed_at?: string;
 	created_at: string;
 	deadline?: string;
@@ -1718,6 +1733,21 @@ export namespace API {
 	export namespace Http200 {
 	export type ResponseBody = {
 	applications: {
+	compliance_summary?: {
+	checked_requirements: number;
+	high_count: number;
+	is_compliant: boolean;
+	low_count: number;
+	medium_count: number;
+	missing_items: {
+	requirement: string;
+	section_id: string;
+	section_title: string;
+	severity: "HIGH" | "LOW" | "MEDIUM";
+	}[];
+	missing_requirements: number;
+	severity?: "HIGH" | "LOW" | "MEDIUM" | null;
+	};
 	completed_at?: string;
 	created_at: string;
 	deadline?: string;

@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { AppButton } from "@/components/app/buttons/app-button";
 import { ThemeBadge } from "@/components/shared/theme-badge";
@@ -10,6 +11,7 @@ import { CardActionMenu } from "../dashboard/card-action-menu";
 import { ApplicationDownloadMenu } from "./application-download-menu";
 
 type ApplicationStatus = API.ListApplications.Http200.ResponseBody["applications"][0]["status"];
+type ComplianceSummary = API.ListApplications.Http200.ResponseBody["applications"][0]["compliance_summary"];
 
 interface StatusStyle {
 	className?: string;
@@ -60,7 +62,28 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
 	const deadlineInfo = getDeadlineInfo(application.deadline);
 	const statusStyles = statusStyleMap[application.status];
+	const complianceSummary = application.compliance_summary as ComplianceSummary | undefined;
 	const isDownloadEnabled = application.status === APPLICATION_STATUS.WORKING_DRAFT;
+
+	const complianceBadge =
+		complianceSummary &&
+		(complianceSummary.is_compliant
+			? {
+					className: "bg-green-100 text-green-800",
+					icon: <ShieldCheck className="size-3.5" />,
+					label: "Compliance OK",
+				}
+			: {
+					className:
+						complianceSummary.severity === "HIGH"
+							? "bg-red-100 text-red-800"
+							: complianceSummary.severity === "MEDIUM"
+								? "bg-amber-100 text-amber-800"
+								: "bg-blue-100 text-blue-800",
+					icon: <AlertTriangle className="size-3.5" />,
+					label: `Compliance ${complianceSummary.severity ?? "LOW"} (${complianceSummary.missing_requirements})`,
+				});
+
 	return (
 		<div
 			className="relative flex h-[206px] flex-col rounded-lg border px-4 py-4 bg-preview-bg border-[#E1DFEB] hover:border-primary hover:border-2 transition-all"
@@ -120,6 +143,14 @@ export function ApplicationCard({
 						{application.title}
 					</h3>
 				</div>
+				{complianceBadge && (
+					<div
+						className={`w-fit text-[11px] px-2 py-0.5 rounded-sm font-medium flex items-center gap-1 ${complianceBadge.className}`}
+					>
+						{complianceBadge.icon}
+						<span>{complianceBadge.label}</span>
+					</div>
+				)}
 
 				{application.description && (
 					<p

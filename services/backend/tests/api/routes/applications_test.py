@@ -75,6 +75,43 @@ async def test_list_applications_empty(
     assert data["applications"] == []
 
 
+async def test_list_applications_includes_compliance_summary(
+    test_client: TestingClientType,
+    project: Project,
+    async_session_maker: async_sessionmaker[Any],
+    project_member_user: OrganizationUser,
+) -> None:
+    async with async_session_maker() as session, session.begin():
+        app = GrantApplication(
+            title="Compliance App",
+            project_id=project.id,
+            status=ApplicationStatusEnum.WORKING_DRAFT,
+            compliance_summary={
+                "checked_requirements": 4,
+                "high_count": 1,
+                "is_compliant": False,
+                "low_count": 0,
+                "medium_count": 0,
+                "missing_items": [],
+                "missing_requirements": 1,
+                "severity": "HIGH",
+            },
+        )
+        session.add(app)
+        await session.commit()
+
+    response = await test_client.get(
+        f"/organizations/{project.organization_id}/projects/{project.id}/applications",
+        headers={"Authorization": f"Bearer {project_member_user.firebase_uid}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    app_data = next((item for item in data["applications"] if item["id"] == str(app.id)), None)
+    assert app_data is not None
+    assert app_data["compliance_summary"]["severity"] == "HIGH"
+
+
 async def test_list_applications_unauthorized(
     test_client: TestingClientType,
     project: Project,

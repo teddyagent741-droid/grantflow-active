@@ -425,6 +425,7 @@ class GrantApplication(BaseWithUUIDPK):
     completion_email_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     form_inputs: Mapped[ResearchDeepDive | TranslationalResearchDeepDive | None] = mapped_column(JSON, nullable=True)
     research_objectives: Mapped[list[ResearchObjective] | None] = mapped_column(JSON, nullable=True)
+    compliance_summary: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     status: Mapped[ApplicationStatusEnum] = mapped_column(
         Enum(ApplicationStatusEnum), default=ApplicationStatusEnum.WORKING_DRAFT, index=True
     )
