@@ -400,11 +400,19 @@ async def extract_file_content(
                 enable_document_classification=enable_document_classification,
                 language_hint=language_hint,
             )
-            result = await extract_bytes(
-                content=content, mime_type=mime_type, config=config
-            )
+            try:
+                result = await extract_bytes(
+                    content=content, mime_type=mime_type, config=config
+                )
+            except TypeError:
+                # Backward compatibility: older kreuzberg uses positional args.
+                result = await extract_bytes(content, mime_type, config=config)
         else:
-            result = await extract_bytes(content=content, mime_type=mime_type)
+            try:
+                result = await extract_bytes(content=content, mime_type=mime_type)
+            except TypeError:
+                # Backward compatibility: older kreuzberg uses positional args.
+                result = await extract_bytes(content, mime_type)
 
         extraction_duration = time.time() - start_time
         chunks = result.chunks if hasattr(result, "chunks") and result.chunks else None
