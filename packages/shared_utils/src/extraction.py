@@ -414,7 +414,27 @@ async def extract_file_content(
                 )
             except TypeError:
                 # Backward compatibility: older kreuzberg uses positional args.
-                result = await extract_bytes(content, mime_type, config=config)
+                try:
+                    result = await extract_bytes(content, mime_type, config=config)
+                except Exception as e:
+                    logger.warning(
+                        "Configured extraction failed; falling back to plain extraction",
+                        mime_type=mime_type,
+                        error_type=type(e).__name__,
+                        error=str(e),
+                    )
+                    result = await extract_bytes(content, mime_type)
+            except Exception as e:
+                logger.warning(
+                    "Configured extraction failed; falling back to plain extraction",
+                    mime_type=mime_type,
+                    error_type=type(e).__name__,
+                    error=str(e),
+                )
+                try:
+                    result = await extract_bytes(content=content, mime_type=mime_type)
+                except TypeError:
+                    result = await extract_bytes(content, mime_type)
         else:
             try:
                 result = await extract_bytes(content=content, mime_type=mime_type)
