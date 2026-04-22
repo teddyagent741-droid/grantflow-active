@@ -46,10 +46,15 @@ async def handle_convert_file(
             file_content = html_to_docx(html_content)
         elif output_format == "md":
             content_type = "text/markdown"
-            file_content = convert(
-                html_content,
-                preprocessing=PreprocessingOptions(enabled=True),
-            ).encode()
+            try:
+                file_content = convert(
+                    html_content,
+                    preprocessing=PreprocessingOptions(enabled=True),
+                ).encode()
+            except TypeError:
+                # Backward compatibility for html_to_markdown versions without
+                # the `preprocessing` keyword argument.
+                file_content = convert(html_content).encode()
 
         return Response[bytes](
             content=file_content,

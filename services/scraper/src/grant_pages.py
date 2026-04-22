@@ -23,12 +23,17 @@ async def download_and_save_pages(*, grants_info: list[tuple[str, str]]) -> None
 
 
 async def save_markdown_page(*, html: str, url: str, document_number: str) -> None:
-    markdown = convert(
-        html,
-        preprocessing=PreprocessingOptions(
-            enabled=True,
-        ),
-    )
+    try:
+        markdown = convert(
+            html,
+            preprocessing=PreprocessingOptions(
+                enabled=True,
+            ),
+        )
+    except TypeError:
+        # Backward compatibility for html_to_markdown versions without
+        # the `preprocessing` keyword argument.
+        markdown = convert(html)
     formatted_markdown = text(markdown)
 
     await save_grant_page_content(url=url, document_number=document_number, content=formatted_markdown)
