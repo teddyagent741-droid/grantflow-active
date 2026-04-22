@@ -143,8 +143,13 @@ def _get_paragraph_alignment(alignment: str) -> WD_PARAGRAPH_ALIGNMENT:
 
 
 def html_to_docx(html_content: str) -> bytes:
-    markdown_content = convert(
-        html_content,
-        preprocessing=PreprocessingOptions(enabled=True),
-    )
+    try:
+        markdown_content = convert(
+            html_content,
+            preprocessing=PreprocessingOptions(enabled=True),
+        )
+    except TypeError:
+        # Backward compatibility for html_to_markdown versions that do not
+        # support the `preprocessing` keyword argument.
+        markdown_content = convert(html_content)
     return markdown_to_docx(markdown_content)

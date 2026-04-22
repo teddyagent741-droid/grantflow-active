@@ -69,14 +69,15 @@ async def sample_grant(
     granting_institution: GrantingInstitution,
 ) -> Grant:
     async with async_session_maker() as session:
+        today = datetime.now(UTC).date()
         grant = Grant(
             id=uuid4(),
             granting_institution_id=granting_institution.id,
             title="Research Grant for AI Development",
             description="A comprehensive grant for advancing AI research and applications",
             url="https://example.com/grants/ai-research",
-            release_date="2025-01-01",
-            expired_date="2025-12-31",
+            release_date=(today - timedelta(days=30)).isoformat(),
+            expired_date=(today + timedelta(days=365)).isoformat(),
             activity_code="R01",
             organization="National Science Foundation",
             parent_organization="NSF",
@@ -206,14 +207,15 @@ async def test_grant_matcher_webhook_processes_existing_grant(
     mock_send_grant_alert_email: AsyncMock,
 ) -> None:
     async with async_session_maker() as session:
+        today = datetime.now(UTC).date()
         old_grant = Grant(
             id=uuid4(),
             granting_institution_id=granting_institution.id,
             title="Old Grant",
             description="This grant was created more than 24 hours ago",
             url="https://example.com/old-grant",
-            release_date="2023-01-01",
-            expired_date="2025-12-31",
+            release_date=(today - timedelta(days=730)).isoformat(),
+            expired_date=(today + timedelta(days=30)).isoformat(),
             activity_code="R01",
             organization="National Science Foundation",
             parent_organization="NSF",
