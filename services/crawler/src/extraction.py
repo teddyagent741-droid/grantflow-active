@@ -647,9 +647,10 @@ async def crawl_url(
         )
 
     content_assembly_start = time.time()
-    content = "\n\n".join(
+    assembled_content = "\n\n".join(
         result["markdown_content"] for result in crawl_results if result["markdown_content"]
     )
+    content = f"\n\n{assembled_content}" if assembled_content else ""
     content_assembly_duration = time.time() - content_assembly_start
 
     logger.debug(
@@ -699,7 +700,7 @@ async def crawl_url(
         if chunks_content:
             chunks = [Chunk(content=chunk) for chunk in chunks_content]
         else:
-            chunks = [Chunk(content=content)]
+            chunks = [Chunk(content=content.lstrip("\n"))]
 
     except KreuzbergError as e:
         logger.warning(
