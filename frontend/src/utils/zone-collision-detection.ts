@@ -46,12 +46,16 @@ const detectZoneCollision: CollisionDetection = (args) => {
 				droppableContainer: {
 					data: {
 						current: {
-							section: GrantSection;
+							section?: GrantSection;
 						};
 					};
 				};
 			}>;
 		} & Collision;
+
+	if (!collidingSection) {
+		return defaultCollisions;
+	}
 
 	if (collidingSection.parent_id !== null) {
 		return defaultCollisions;
