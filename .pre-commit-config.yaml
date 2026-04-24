@@ -51,7 +51,10 @@ repos:
         name: mypy
         require_serial: true
         args:
+          - --config-file=pyproject.toml
           - --exclude=^functions/.*
           - --exclude=^terraform/.*
+          - packages
+          - services
         types:
           - python

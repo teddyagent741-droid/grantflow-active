@@ -99,11 +99,11 @@ def analyze_compliance_requirements(
     checked_requirements = 0
 
     for section in grant_sections:
-        requirements = section.get("requirements", []) if isinstance(section, dict) else []
-        if not requirements:
+        requirements_raw = section.get("requirements", []) if isinstance(section, dict) else []
+        if not isinstance(requirements_raw, list) or not requirements_raw:
             continue
 
-        for requirement_entry in requirements:
+        for requirement_entry in requirements_raw:
             if not isinstance(requirement_entry, dict):
                 continue
             requirement = requirement_entry.get("requirement", "").strip()

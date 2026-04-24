@@ -25,8 +25,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from services.rag.src.constants import ENABLE_EDITORIAL_WORKFLOW
-from services.rag.src.grant_application.constants import GRANT_APPLICATION_STAGES_ORDER
 from services.rag.src.grant_application.compliance_critic import analyze_compliance_requirements
+from services.rag.src.grant_application.constants import GRANT_APPLICATION_STAGES_ORDER
 from services.rag.src.grant_application.dto import StageDTO
 from services.rag.src.grant_application.handlers import (
     handle_enrich_objectives_stage,
