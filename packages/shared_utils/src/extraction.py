@@ -397,6 +397,9 @@ async def extract_file_content(
             mime_type in {"text/plain", "text/markdown", "text/csv"}
             and not enable_chunking
             and not enable_token_reduction
+            and not enable_entity_extraction
+            and not enable_keyword_extraction
+            and not enable_document_classification
         ):
             text_content = content.decode("utf-8", errors="replace")
             normalized_mime_type = _normalize_output_mime_type(

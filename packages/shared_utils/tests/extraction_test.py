@@ -59,6 +59,47 @@ async def test_extract_csv() -> None:
     assert output_mime_type == "text/markdown"
 
 
+async def test_extract_plain_text_without_enrichment_flags_uses_fast_path() -> None:
+    content = b"Hello, World!"
+    mime_type = "text/plain"
+
+    result, output_mime_type, chunks, metadata = await extract_file_content(
+        content=content,
+        mime_type=mime_type,
+        enable_chunking=False,
+        enable_token_reduction=False,
+        enable_entity_extraction=False,
+        enable_keyword_extraction=False,
+        enable_document_classification=False,
+    )
+
+    assert isinstance(result, str)
+    assert result == "Hello, World!"
+    assert output_mime_type == mime_type
+    assert chunks is None
+    assert metadata == {}
+
+
+async def test_extract_plain_text_with_default_flags_keeps_metadata_behavior() -> None:
+    content = b"Hello, World!"
+    mime_type = "text/plain"
+
+    result, output_mime_type, chunks, metadata = await extract_file_content(
+        content=content,
+        mime_type=mime_type,
+        enable_chunking=False,
+        enable_token_reduction=False,
+    )
+
+    assert isinstance(result, str)
+    assert result == "Hello, World!"
+    assert output_mime_type == mime_type
+    assert chunks is None
+    assert metadata is not None
+    assert "entities" in metadata
+    assert "keywords" in metadata
+
+
 @pytest.mark.parametrize("document", TEST_DATA_SOURCES)
 async def test_extract_with_kreuzberg(document: Path) -> None:
     content = document.read_bytes()
