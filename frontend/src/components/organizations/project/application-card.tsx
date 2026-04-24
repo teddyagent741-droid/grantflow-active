@@ -64,6 +64,18 @@ export function ApplicationCard({
 	const statusStyles = statusStyleMap[application.status];
 	const complianceSummary = application.compliance_summary as ComplianceSummary | undefined;
 	const isDownloadEnabled = application.status === APPLICATION_STATUS.WORKING_DRAFT;
+	const complianceSeverityClass = (() => {
+		if (!complianceSummary || complianceSummary.is_compliant) {
+			return "bg-blue-100 text-blue-800";
+		}
+		if (complianceSummary.severity === "HIGH") {
+			return "bg-red-100 text-red-800";
+		}
+		if (complianceSummary.severity === "MEDIUM") {
+			return "bg-amber-100 text-amber-800";
+		}
+		return "bg-blue-100 text-blue-800";
+	})();
 
 	const complianceBadge =
 		complianceSummary &&
@@ -74,12 +86,7 @@ export function ApplicationCard({
 					label: "Compliance OK",
 				}
 			: {
-					className:
-						complianceSummary.severity === "HIGH"
-							? "bg-red-100 text-red-800"
-							: complianceSummary.severity === "MEDIUM"
-								? "bg-amber-100 text-amber-800"
-								: "bg-blue-100 text-blue-800",
+					className: complianceSeverityClass,
 					icon: <AlertTriangle className="size-3.5" />,
 					label: `Compliance ${complianceSummary.severity ?? "LOW"} (${complianceSummary.missing_requirements})`,
 				});

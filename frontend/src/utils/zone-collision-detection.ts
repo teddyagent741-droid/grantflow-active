@@ -53,10 +53,6 @@ const detectZoneCollision: CollisionDetection = (args) => {
 			}>;
 		} & Collision;
 
-	if (!collidingSection) {
-		return defaultCollisions;
-	}
-
 	if (collidingSection.parent_id !== null) {
 		return defaultCollisions;
 	}
