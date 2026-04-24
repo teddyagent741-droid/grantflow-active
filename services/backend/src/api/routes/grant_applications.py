@@ -165,6 +165,7 @@ class ApplicationResponse(TypedDict):
     deadline: NotRequired[str]
     editor_document_id: str | None
     editor_document_init: bool
+    compliance_summary: NotRequired[dict[str, Any]]
     created_at: str
     updated_at: str
 
@@ -181,6 +182,7 @@ class ApplicationListItemResponse(TypedDict):
     created_at: str
     updated_at: str
     submission_date: NotRequired[str]
+    compliance_summary: NotRequired[dict[str, Any]]
 
 
 class PaginationMetadata(TypedDict):
@@ -273,6 +275,9 @@ def build_application_response(grant_application: GrantApplication) -> Applicati
 
     if grant_application.parent_id:
         response["parent_id"] = str(grant_application.parent_id)
+
+    if grant_application.compliance_summary:
+        response["compliance_summary"] = grant_application.compliance_summary
 
     if grant_application.grant_template:
         template = grant_application.grant_template
@@ -823,6 +828,8 @@ async def handle_list_applications(
                 item["completed_at"] = app.completed_at.isoformat()
             if app.parent_id:
                 item["parent_id"] = str(app.parent_id)
+            if app.compliance_summary:
+                item["compliance_summary"] = app.compliance_summary
             application_items.append(item)
 
         return ApplicationListResponse(
@@ -922,6 +929,7 @@ async def handle_duplicate_application(
                         "status": ApplicationStatusEnum.IN_PROGRESS,
                         "form_inputs": original_app.form_inputs,
                         "research_objectives": original_app.research_objectives,
+                        "compliance_summary": original_app.compliance_summary,
                         "text": original_app.text,
                         "parent_id": application_id,
                     }
@@ -1080,6 +1088,8 @@ async def handle_list_organization_applications(
                 item["completed_at"] = app.completed_at.isoformat()
             if app.parent_id:
                 item["parent_id"] = str(app.parent_id)
+            if app.compliance_summary:
+                item["compliance_summary"] = app.compliance_summary
             application_items.append(item)
 
         return ApplicationListResponse(

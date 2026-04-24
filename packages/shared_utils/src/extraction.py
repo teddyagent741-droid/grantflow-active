@@ -1,11 +1,11 @@
 import re
+from inspect import signature
 from typing import Any, Final, TypedDict, cast
 
 from kreuzberg import (
     ExtractionConfig,
     ExtractionResult,
     KreuzbergError,
-    PSMMode,
     TesseractConfig,
     TokenReductionConfig,
     extract_bytes,
@@ -15,6 +15,19 @@ from packages.shared_utils.src.logger import get_logger
 from packages.shared_utils.src.stopwords import ACADEMIC_STOP_WORDS
 
 logger = get_logger(__name__)
+
+
+def _build_extraction_config_compat(config_kwargs: dict[str, Any]) -> ExtractionConfig:
+    """Build ExtractionConfig across kreuzberg API versions.
+
+    Some CI environments run older kreuzberg releases that reject newer kwargs
+    such as `chunk_content`. We filter kwargs against the runtime signature.
+    """
+    supported_params = set(signature(ExtractionConfig).parameters)
+    filtered_kwargs = {
+        key: value for key, value in config_kwargs.items() if key in supported_params
+    }
+    return ExtractionConfig(**filtered_kwargs)
 
 
 class Entity(TypedDict):
@@ -262,26 +275,27 @@ def get_scientific_extraction_config(
 
     ocr_config = TesseractConfig(
         output_format="markdown",
-        psm=PSMMode.AUTO_ONLY,
         language="eng",
         tessedit_enable_dict_correction=True,
         language_model_ngram_on=False,
     )
 
-    return ExtractionConfig(
-        chunk_content=chunk_content,
-        max_chars=max_chars,
-        max_overlap=max_overlap,
-        token_reduction=token_reduction,
-        force_ocr=False,
-        ocr_config=ocr_config,
-        auto_detect_language=True,
-        extract_entities=enable_entity_extraction,
-        extract_keywords=enable_keyword_extraction,
-        keyword_count=10,
-        auto_detect_document_type=enable_document_classification,
-        document_classification_mode="text",
-        document_type_confidence_threshold=0.4,
+    return _build_extraction_config_compat(
+        {
+            "chunk_content": chunk_content,
+            "max_chars": max_chars,
+            "max_overlap": max_overlap,
+            "token_reduction": token_reduction,
+            "force_ocr": False,
+            "ocr_config": ocr_config,
+            "auto_detect_language": True,
+            "extract_entities": enable_entity_extraction,
+            "extract_keywords": enable_keyword_extraction,
+            "keyword_count": 10,
+            "auto_detect_document_type": enable_document_classification,
+            "document_classification_mode": "text",
+            "document_type_confidence_threshold": 0.4,
+        }
     )
 
 
@@ -299,6 +313,14 @@ def _get_extraction_config(
 
 def _extract_chunks_from_result(result: ExtractionResult) -> list[str] | None:
     return result.chunks if result.chunks else None
+
+
+def _normalize_output_mime_type(input_mime_type: str, output_mime_type: str) -> str:
+    # Older kreuzberg versions may keep CSV as text/csv while returning markdown
+    # content. Normalize to the expected semantic output type.
+    if input_mime_type == "text/csv" and output_mime_type == "text/csv":
+        return "text/markdown"
+    return output_mime_type
 
 
 def classify_document_content(
@@ -372,6 +394,18 @@ async def extract_file_content(
 
     try:
         if (
+            mime_type in {"text/plain", "text/markdown", "text/csv"}
+            and not enable_chunking
+            and not enable_token_reduction
+        ):
+            text_content = content.decode("utf-8", errors="replace")
+            normalized_mime_type = _normalize_output_mime_type(
+                input_mime_type=mime_type,
+                output_mime_type=mime_type,
+            )
+            return text_content, normalized_mime_type, None, {}
+
+        if (
             enable_chunking
             or enable_token_reduction
             or enable_entity_extraction
@@ -386,11 +420,39 @@ async def extract_file_content(
                 enable_document_classification=enable_document_classification,
                 language_hint=language_hint,
             )
-            result = await extract_bytes(
-                content=content, mime_type=mime_type, config=config
-            )
+            try:
+                result = await extract_bytes(
+                    content=content, mime_type=mime_type, config=config
+                )
+            except TypeError:
+                # Backward compatibility: older kreuzberg uses positional args.
+                try:
+                    result = await extract_bytes(content, mime_type, config=config)
+                except Exception as e:
+                    logger.warning(
+                        "Configured extraction failed; falling back to plain extraction",
+                        mime_type=mime_type,
+                        error_type=type(e).__name__,
+                        error=str(e),
+                    )
+                    result = await extract_bytes(content, mime_type)
+            except Exception as e:
+                logger.warning(
+                    "Configured extraction failed; falling back to plain extraction",
+                    mime_type=mime_type,
+                    error_type=type(e).__name__,
+                    error=str(e),
+                )
+                try:
+                    result = await extract_bytes(content=content, mime_type=mime_type)
+                except TypeError:
+                    result = await extract_bytes(content, mime_type)
         else:
-            result = await extract_bytes(content=content, mime_type=mime_type)
+            try:
+                result = await extract_bytes(content=content, mime_type=mime_type)
+            except TypeError:
+                # Backward compatibility: older kreuzberg uses positional args.
+                result = await extract_bytes(content, mime_type)
 
         extraction_duration = time.time() - start_time
         chunks = result.chunks if hasattr(result, "chunks") and result.chunks else None
@@ -432,7 +494,11 @@ async def extract_file_content(
             extraction_duration_ms=round(extraction_duration * 1000, 2),
         )
 
-        return result.content, result.mime_type, chunks, metadata
+        normalized_mime_type = _normalize_output_mime_type(
+            input_mime_type=mime_type,
+            output_mime_type=result.mime_type,
+        )
+        return result.content, normalized_mime_type, chunks, metadata
     except KreuzbergError as e:
         extraction_duration = time.time() - start_time
         logger.warning(

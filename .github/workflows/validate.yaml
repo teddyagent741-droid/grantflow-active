@@ -10,6 +10,7 @@ on:
 
 env:
   NODE_OPTIONS: "--max_old_space_size=4096"
+  PCT_TFPATH: "tofu"
 
 permissions:
   contents: read
@@ -42,6 +43,14 @@ jobs:
       - name: Install Task
         uses: ./.github/actions/setup-task
 
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v2
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: v0.57.0
+
       - name: Run Prek validators
         run: uvx prek run --show-diff-on-failure --color=always --all-files
 
@@ -68,7 +77,9 @@ jobs:
 
       - name: Validate Python
         if: steps.changes.outputs.python == 'true'
-        run: task lint:python
+        run: |
+          task python:lint:check
+          task python:format:check
 
       - name: Validate TypeScript
         if: steps.changes.outputs.typescript == 'true'

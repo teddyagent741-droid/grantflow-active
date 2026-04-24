@@ -1,5 +1,6 @@
 import time
 import traceback
+from datetime import UTC, datetime
 from typing import Any
 
 from packages.db.src.enums import ApplicationStatusEnum, GrantApplicationStageEnum, RagGenerationStatusEnum
@@ -24,6 +25,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from services.rag.src.constants import ENABLE_EDITORIAL_WORKFLOW
+from services.rag.src.grant_application.compliance_critic import analyze_compliance_requirements
 from services.rag.src.grant_application.constants import GRANT_APPLICATION_STAGES_ORDER
 from services.rag.src.grant_application.dto import StageDTO
 from services.rag.src.grant_application.handlers import (
@@ -789,6 +791,10 @@ async def handle_grant_application_pipeline(  # noqa: PLR0912, PLR0915
                     session_maker=session_maker,
                     trace_id=trace_id,
                 )
+                compliance_summary = analyze_compliance_requirements(
+                    application_text=application_text,
+                    grant_sections=grant_template.grant_sections,
+                )
 
                 try:
                     save_application_output(
@@ -817,10 +823,24 @@ async def handle_grant_application_pipeline(  # noqa: PLR0912, PLR0915
                         await session.execute(
                             update(GrantApplication)
                             .where(GrantApplication.id == application_id)
-                            .values(text=application_text, status=ApplicationStatusEnum.WORKING_DRAFT)
+                            .values(
+                                text=application_text,
+                                status=ApplicationStatusEnum.WORKING_DRAFT,
+                                compliance_summary=compliance_summary,
+                            )
                         )
-
-                        await job_manager.update_job_status(RagGenerationStatusEnum.COMPLETED)
+                        await session.execute(
+                            update(RagGenerationJob)
+                            .where(RagGenerationJob.id == existing_job.id)
+                            .values(
+                                status=RagGenerationStatusEnum.COMPLETED,
+                                completed_at=datetime.now(UTC),
+                                checkpoint_data={
+                                    "generated_sections": complete_section_texts,
+                                    "validation_results": compliance_summary,
+                                },
+                            )
+                        )
                         await job_manager.add_notification(
                             event=NotificationEvents.GRANT_APPLICATION_GENERATION_COMPLETED,
                             message="Application ready for review",
@@ -828,6 +848,8 @@ async def handle_grant_application_pipeline(  # noqa: PLR0912, PLR0915
                             data={
                                 "application_id": str(application_id),
                                 "word_count": word_count,
+                                "compliance_severity": compliance_summary["severity"],
+                                "missing_compliance_items": compliance_summary["missing_requirements"],
                             },
                         )
 

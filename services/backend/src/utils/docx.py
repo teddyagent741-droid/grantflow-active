@@ -14,6 +14,18 @@ class TableRow(TypedDict):
     is_header: bool
 
 
+def _as_markdown_text(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    markdown_value = getattr(value, "markdown", None)
+    if isinstance(markdown_value, str):
+        return markdown_value
+    content_value = getattr(value, "content", None)
+    if isinstance(content_value, str):
+        return content_value
+    return str(value)
+
+
 def markdown_to_docx(markdown_text: str) -> bytes:
     markdown(markdown_text, extensions=["tables", "fenced_code", "nl2br"])
 
@@ -143,8 +155,15 @@ def _get_paragraph_alignment(alignment: str) -> WD_PARAGRAPH_ALIGNMENT:
 
 
 def html_to_docx(html_content: str) -> bytes:
-    markdown_content = convert(
-        html_content,
-        preprocessing=PreprocessingOptions(enabled=True),
-    )
+    try:
+        markdown_content = _as_markdown_text(
+            convert(
+                html_content,
+                preprocessing=PreprocessingOptions(enabled=True),
+            )
+        )
+    except TypeError:
+        # Backward compatibility for html_to_markdown versions that do not
+        # support the `preprocessing` keyword argument.
+        markdown_content = _as_markdown_text(convert(html_content))
     return markdown_to_docx(markdown_content)

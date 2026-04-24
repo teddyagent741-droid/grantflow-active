@@ -49,6 +49,13 @@ repos:
         id: mypy
         language: system
         name: mypy
+        pass_filenames: false
         require_serial: true
+        args:
+          - --config-file=pyproject.toml
+          - --exclude=^functions/.*
+          - --exclude=^terraform/.*
+          - packages
+          - services
         types:
           - python

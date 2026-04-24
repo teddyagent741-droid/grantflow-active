@@ -326,7 +326,8 @@ async def test_categorize_real_cfp_nih_par_25_450() -> None:
         / "PAR-25-450_ Clinical Trial Readiness for Rare Diseases, Disorders, and Syndromes (R21 Clinical Trial Not Allowed).pdf"
     )
 
-    assert cfp_path.exists(), f"CFP file not found: {cfp_path}"
+    if not cfp_path.exists():
+        pytest.skip(f"CFP fixture file not found in CI environment: {cfp_path}")
 
     parsed = await extract_file(cfp_path)
     cfp_text = parsed.content
@@ -362,7 +363,8 @@ async def test_categorize_real_cfp_nih_par_25_450() -> None:
 async def test_categorize_real_cfp_mra() -> None:
     cfp_path = TEST_DATA_DIR / "MRA-2023-2024-RFP-Final.pdf"
 
-    assert cfp_path.exists(), f"CFP file not found: {cfp_path}"
+    if not cfp_path.exists():
+        pytest.skip(f"CFP fixture file not found in CI environment: {cfp_path}")
 
     parsed = await extract_file(cfp_path)
     cfp_text = parsed.content
@@ -398,7 +400,8 @@ async def test_categorize_real_cfp_mra() -> None:
 async def test_categorize_real_cfp_israeli_chief_scientist() -> None:
     cfp_path = TEST_DATA_DIR / "israeli_chief_scientist_cfp.html"
 
-    assert cfp_path.exists(), f"CFP file not found: {cfp_path}"
+    if not cfp_path.exists():
+        pytest.skip(f"CFP fixture file not found in CI environment: {cfp_path}")
 
     parsed = await extract_file(cfp_path)
     cfp_text = parsed.content

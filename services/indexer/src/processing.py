@@ -45,7 +45,11 @@ async def process_source(
         language_hint=language_hint,
     )
 
-    result = await extract_bytes(content=content, mime_type=mime_type, config=config)
+    try:
+        result = await extract_bytes(content=content, mime_type=mime_type, config=config)
+    except TypeError:
+        # Backward compatibility: older kreuzberg versions use positional args.
+        result = await extract_bytes(content, mime_type, config=config)
 
     extracted_text = result.content
     processed_mime_type = result.mime_type

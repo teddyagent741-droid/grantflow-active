@@ -46,7 +46,7 @@ const detectZoneCollision: CollisionDetection = (args) => {
 				droppableContainer: {
 					data: {
 						current: {
-							section: GrantSection;
+							section?: GrantSection;
 						};
 					};
 				};

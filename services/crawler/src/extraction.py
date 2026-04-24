@@ -168,9 +168,14 @@ async def extract_and_process_content(
             enable_document_classification=True,
             language_hint="en",
         )
-        extraction_result = await extract_bytes(
-            content=clean_html.encode("utf-8"), mime_type="text/html", config=config
-        )
+        try:
+            extraction_result = await extract_bytes(
+                content=clean_html.encode("utf-8"), mime_type="text/html", config=config
+            )
+        except TypeError:
+            extraction_result = await extract_bytes(
+                clean_html.encode("utf-8"), "text/html", config=config
+            )
         md_out = (
             extraction_result.content
             if isinstance(extraction_result.content, str)
@@ -641,11 +646,13 @@ async def crawl_url(
             file_collect_duration_ms=round(file_collect_duration * 1000, 2),
         )
 
-        content = ""
-
     content_assembly_start = time.time()
-    for result in crawl_results:
-        content += "\n\n" + result["markdown_content"]
+    assembled_content = "\n\n".join(
+        result["markdown_content"]
+        for result in crawl_results
+        if result["markdown_content"]
+    )
+    content = f"\n\n{assembled_content}" if assembled_content else ""
     content_assembly_duration = time.time() - content_assembly_start
 
     logger.debug(
@@ -665,9 +672,16 @@ async def crawl_url(
             enable_document_classification=True,
             language_hint="en",
         )
-        extraction_result = await extract_bytes(
-            content=content.encode("utf-8"), mime_type="text/markdown", config=config
-        )
+        try:
+            extraction_result = await extract_bytes(
+                content=content.encode("utf-8"),
+                mime_type="text/markdown",
+                config=config,
+            )
+        except TypeError:
+            extraction_result = await extract_bytes(
+                content.encode("utf-8"), "text/markdown", config=config
+            )
         chunks_content = (
             extraction_result.chunks
             if hasattr(extraction_result, "chunks") and extraction_result.chunks
@@ -690,7 +704,7 @@ async def crawl_url(
         if chunks_content:
             chunks = [Chunk(content=chunk) for chunk in chunks_content]
         else:
-            chunks = [Chunk(content=content)]
+            chunks = [Chunk(content=content.lstrip("\n"))]
 
     except KreuzbergError as e:
         logger.warning(
