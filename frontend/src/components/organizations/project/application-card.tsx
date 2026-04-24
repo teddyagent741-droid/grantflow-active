@@ -11,7 +11,6 @@ import { CardActionMenu } from "../dashboard/card-action-menu";
 import { ApplicationDownloadMenu } from "./application-download-menu";
 
 type ApplicationStatus = API.ListApplications.Http200.ResponseBody["applications"][0]["status"];
-type ComplianceSummary = API.ListApplications.Http200.ResponseBody["applications"][0]["compliance_summary"];
 
 interface StatusStyle {
 	className?: string;
@@ -62,7 +61,7 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
 	const deadlineInfo = getDeadlineInfo(application.deadline);
 	const statusStyles = statusStyleMap[application.status];
-	const complianceSummary = application.compliance_summary as ComplianceSummary | undefined;
+	const complianceSummary = application.compliance_summary;
 	const isDownloadEnabled = application.status === APPLICATION_STATUS.WORKING_DRAFT;
 	const complianceSeverityClass = (() => {
 		if (!complianceSummary || complianceSummary.is_compliant) {
