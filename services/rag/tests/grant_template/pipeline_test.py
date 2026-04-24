@@ -231,11 +231,12 @@ async def test_handle_grant_template_pipeline_clones_predefined_based_on_activit
 ) -> None:
     if not grant_template.granting_institution_id:
         pytest.skip("grant_template fixture missing granting institution")
+    unique_activity_code = "ZZZ999"
 
     async with async_session_maker() as session:
         predefined = PredefinedGrantTemplateFactory.build(
             granting_institution_id=grant_template.granting_institution_id,
-            activity_code="R21",
+            activity_code=unique_activity_code,
             grant_sections=[
                 {
                     "id": "specific-aims",
@@ -264,7 +265,7 @@ async def test_handle_grant_template_pipeline_clones_predefined_based_on_activit
                         "full_name": "National Institutes of Health",
                         "abbreviation": "NIH",
                     },
-                    "activity_code": "r21",
+                    "activity_code": unique_activity_code.lower(),
                 }
             },
         )
