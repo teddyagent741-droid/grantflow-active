@@ -488,3 +488,36 @@ def mock_grant_template_job_manager() -> AsyncMock:
     manager.add_notification = AsyncMock(return_value=None)
     manager.update_job_status = AsyncMock(return_value=None)
     return manager
+
+
+@pytest.fixture
+def mock_job_manager(mock_grant_application_job_manager: AsyncMock) -> AsyncMock:
+    return mock_grant_application_job_manager
+
+
+@pytest.fixture
+def research_objectives() -> list[ResearchObjective]:
+    return [
+        ResearchObjective(
+            number=1,
+            title="Primary Objective",
+            research_tasks=[
+                ResearchTask(number=1, title="Task 1.1"),
+                ResearchTask(number=2, title="Task 1.2"),
+            ],
+        ),
+        ResearchObjective(
+            number=2,
+            title="Secondary Objective",
+            research_tasks=[
+                ResearchTask(number=1, title="Task 2.1"),
+            ],
+        ),
+    ]
+
+
+@pytest.fixture
+async def melanoma_alliance_full_application(
+    test_application_with_template: GrantApplication,
+) -> GrantApplication:
+    return test_application_with_template

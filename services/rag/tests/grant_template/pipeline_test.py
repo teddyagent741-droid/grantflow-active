@@ -248,6 +248,7 @@ async def test_handle_grant_template_pipeline_clones_predefined_based_on_activit
             ],
         )
         session.add(predefined)
+        await session.flush()
         cfp_job = RagGenerationJob(
             grant_template_id=grant_template.id,
             template_stage=GrantTemplateStageEnum.CFP_ANALYSIS,
