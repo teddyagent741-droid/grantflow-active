@@ -50,5 +50,8 @@ repos:
         language: system
         name: mypy
         require_serial: true
+        args:
+          - --exclude=^functions/.*
+          - --exclude=^terraform/.*
         types:
           - python

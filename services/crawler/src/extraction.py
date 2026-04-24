@@ -648,7 +648,9 @@ async def crawl_url(
 
     content_assembly_start = time.time()
     assembled_content = "\n\n".join(
-        result["markdown_content"] for result in crawl_results if result["markdown_content"]
+        result["markdown_content"]
+        for result in crawl_results
+        if result["markdown_content"]
     )
     content = f"\n\n{assembled_content}" if assembled_content else ""
     content_assembly_duration = time.time() - content_assembly_start
@@ -672,7 +674,9 @@ async def crawl_url(
         )
         try:
             extraction_result = await extract_bytes(
-                content=content.encode("utf-8"), mime_type="text/markdown", config=config
+                content=content.encode("utf-8"),
+                mime_type="text/markdown",
+                config=config,
             )
         except TypeError:
             extraction_result = await extract_bytes(

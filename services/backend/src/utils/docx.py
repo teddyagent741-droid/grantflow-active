@@ -158,8 +158,8 @@ def html_to_docx(html_content: str) -> bytes:
     try:
         markdown_content = _as_markdown_text(
             convert(
-            html_content,
-            preprocessing=PreprocessingOptions(enabled=True),
+                html_content,
+                preprocessing=PreprocessingOptions(enabled=True),
             )
         )
     except TypeError:
