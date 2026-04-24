@@ -104,6 +104,8 @@ def analyze_compliance_requirements(
             continue
 
         for requirement_entry in requirements:
+            if not isinstance(requirement_entry, dict):
+                continue
             requirement = requirement_entry.get("requirement", "").strip()
             category = requirement_entry.get("category", "").strip().lower()
             if not requirement:

@@ -68,6 +68,40 @@ def scenario_loader() -> Callable[[str], BaseScenario]:
 
 
 @pytest.fixture
+def grant_sections() -> list[GrantLongFormSection]:
+    return [
+        GrantLongFormSection(
+            id="section-1",
+            order=1,
+            title="Project Summary",
+            evidence="Summarize project goals and significance",
+            parent_id=None,
+            depends_on=[],
+            generation_instructions="Write a concise project summary.",
+            is_clinical_trial=False,
+            is_detailed_research_plan=False,
+            keywords=["summary", "significance"],
+            search_queries=["project goals significance"],
+            topics=["overview"],
+        ),
+        GrantLongFormSection(
+            id="section-2",
+            order=2,
+            title="Research Plan",
+            evidence="Detail methods and approach",
+            parent_id=None,
+            depends_on=["section-1"],
+            generation_instructions="Describe methods and experimental approach.",
+            is_clinical_trial=False,
+            is_detailed_research_plan=True,
+            keywords=["methods", "approach", "experiments"],
+            search_queries=["research methods experimental approach"],
+            topics=["methodology"],
+        ),
+    ]
+
+
+@pytest.fixture
 async def grant_template_with_sections(
     grant_application: GrantApplication,
     grant_sections: list[GrantLongFormSection],
