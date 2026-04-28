@@ -21,6 +21,13 @@ tmux_cmd() {
   fi
 }
 
+ensure_tmux_session() {
+  local session="$1"
+  if ! tmux_cmd has-session -t "$session" 2>/dev/null; then
+    tmux_cmd new-session -d -s "$session" -c "$ROOT_DIR" || tmux_cmd new-session -d -s "$session"
+  fi
+}
+
 require_cmd() {
   local cmd="$1"
   local hint="$2"
@@ -100,16 +107,14 @@ uv run alembic --config ./packages/db/alembic.ini upgrade head
 
 echo "Starting backend in tmux session: backend-local"
 SESSION_BACKEND="backend-local"
-tmux_cmd has-session -t "=$SESSION_BACKEND" 2>/dev/null || \
-  tmux_cmd new-session -d -s "$SESSION_BACKEND" -c "$ROOT_DIR"
-tmux_cmd send-keys -t "$SESSION_BACKEND" C-c \
+ensure_tmux_session "$SESSION_BACKEND"
+tmux_cmd send-keys -t "$SESSION_BACKEND:0.0" C-c \
   "cd \"$ROOT_DIR\" && export PATH=\"$HOME/.local/bin:\$PATH\" && uv run python scripts/start_backend_local.py" C-m
 
 echo "Starting frontend in tmux session: frontend-local"
 SESSION_FRONTEND="frontend-local"
-tmux_cmd has-session -t "=$SESSION_FRONTEND" 2>/dev/null || \
-  tmux_cmd new-session -d -s "$SESSION_FRONTEND" -c "$ROOT_DIR"
-tmux_cmd send-keys -t "$SESSION_FRONTEND" C-c \
+ensure_tmux_session "$SESSION_FRONTEND"
+tmux_cmd send-keys -t "$SESSION_FRONTEND:0.0" C-c \
   "cd \"$ROOT_DIR/frontend\" && pnpm dev" C-m
 
 echo "Waiting for services..."
