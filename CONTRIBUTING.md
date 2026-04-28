@@ -120,6 +120,27 @@ This will:
 
 We use **Task** to manage development workflows. Here are the key commands for local development:
 
+### Quick Recovery Bundle (recommended)
+
+If you want one command that validates your machine and starts frontend + backend with resilient defaults:
+
+```bash
+# Checks prerequisites, env files, and local ports
+task dev:doctor
+
+# Starts postgres (local), applies migrations, and launches backend/frontend in tmux
+task dev:up
+
+# Stop the tmux sessions and compose services used by local dev
+task dev:down
+```
+
+These commands wrap the scripts under `scripts/`:
+- `scripts/dev-doctor.sh`
+- `scripts/dev-up.sh`
+- `scripts/dev-down.sh`
+- `scripts/start_backend_local.py`
+
 ### Getting Started
 
 First, list all available commands:
