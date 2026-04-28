@@ -19,6 +19,16 @@ tasks:
       - uvx prek install
       - echo "✓ Setup complete - safe to re-run anytime"
 
+  dev:doctor:
+    desc: "Check local environment prerequisites and common misconfigurations"
+    cmds:
+      - ./scripts/dev-doctor.sh
+
+  dev:up:
+    desc: "One-command local bootstrap (deps + db + backend + frontend)"
+    cmds:
+      - ./scripts/dev-up.sh
+
   dev:
     desc: Start all backend services in development mode (database, Pub/Sub, backend, indexer, crawler, rag, crdt)
     deps:
@@ -45,6 +55,11 @@ tasks:
     desc: Stop all development services
     cmds:
       - docker compose --profile services down
+
+  dev:down:
+    desc: "Stop local services started by scripts/dev-up.sh"
+    cmds:
+      - ./scripts/dev-down.sh
 
   test:
     desc: Run all tests (backend services, packages, and frontend) - uses parallel execution by default

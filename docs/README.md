@@ -11,6 +11,7 @@ GrantFlow.AI is a grant application management platform that leverages AI to str
 - [Cloud Architecture](./cloud-architecture.md) - GCP infrastructure design and deployment
 - [CI/CD Architecture](./ci-cd-architecture.md) - Build, test, and deployment pipelines
 - [Cloud Functions](./cloud-functions.md) - Serverless monitoring and automation
+- [Local Development Runbook](./local-development-runbook.md) - One-command local startup and troubleshooting
 
 ### 🔒 Security & Compliance
 - [Security Architecture](./security-architecture.md) - Comprehensive security measures and best practices
