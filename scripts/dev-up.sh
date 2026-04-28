@@ -34,15 +34,17 @@ require_cmd() {
 require_cmd tmux "sudo apt-get install -y tmux"
 require_cmd curl "sudo apt-get install -y curl"
 require_cmd python3 "Install Python 3.13+"
-require_cmd psql "sudo apt-get install -y postgresql postgresql-contrib postgresql-16-pgvector"
+require_cmd psql "Install PostgreSQL client (brew install postgresql@17)"
 require_cmd uv "curl -LsSf https://astral.sh/uv/install.sh | sh"
 require_cmd pnpm "npm install -g pnpm"
-require_cmd rg "sudo apt-get install -y ripgrep"
 
-if ! sudo -n true >/dev/null 2>&1; then
-  echo "This script needs sudo access for local PostgreSQL setup."
-  echo "Run once to cache sudo credentials: sudo -v"
-  exit 1
+OS="$(uname -s)"
+if [[ "$OS" == "Linux" ]]; then
+  if ! sudo -n true >/dev/null 2>&1; then
+    echo "This script needs sudo access for local PostgreSQL setup."
+    echo "Run once to cache sudo credentials: sudo -v"
+    exit 1
+  fi
 fi
 
 if [[ ! -f "$ROOT_DIR/.env" ]]; then
@@ -59,18 +61,34 @@ echo "Ensuring PostgreSQL is running..."
 if command -v pg_ctlcluster >/dev/null 2>&1; then
   # Ubuntu/Debian cluster manager
   sudo pg_ctlcluster 16 main start >/dev/null 2>&1 || true
-elif command -v brew >/dev/null 2>&1 && [[ "$(uname -s)" == "Darwin" ]]; then
+elif command -v brew >/dev/null 2>&1 && [[ "$OS" == "Darwin" ]]; then
   # Homebrew-managed Postgres on macOS
   brew services start postgresql@17 >/dev/null 2>&1 || true
 fi
 
+admin_psql() {
+  if [[ "$OS" == "Linux" ]]; then
+    sudo -u postgres psql "$@"
+  else
+    psql "$@"
+  fi
+}
+
 echo "Preparing local database role and extensions..."
-sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='local'" | rg "1" >/dev/null || \
-  sudo -u postgres psql -c "CREATE ROLE local WITH LOGIN PASSWORD 'local';"
-sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='local'" | rg "1" >/dev/null || \
-  sudo -u postgres psql -c "CREATE DATABASE local OWNER local;"
-sudo -u postgres psql -d local -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" >/dev/null
-sudo -u postgres psql -d local -c "CREATE EXTENSION IF NOT EXISTS vector;" >/dev/null
+admin_psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='local'" | grep -q "1" || \
+  admin_psql -d postgres -c "CREATE ROLE local WITH LOGIN PASSWORD 'local';"
+admin_psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='local'" | grep -q "1" || \
+  admin_psql -d postgres -c "CREATE DATABASE local OWNER local;"
+admin_psql -d local -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" >/dev/null
+if ! admin_psql -d local -c "CREATE EXTENSION IF NOT EXISTS vector;" >/dev/null; then
+  echo "Failed to enable pgvector extension."
+  if [[ "$OS" == "Darwin" ]]; then
+    echo "Hint: brew install pgvector"
+  else
+    echo "Hint: sudo apt-get install -y postgresql-16-pgvector"
+  fi
+  exit 1
+fi
 
 echo "Installing workspace dependencies with uv and pnpm..."
 uv sync --all-packages --all-extras --all-groups
