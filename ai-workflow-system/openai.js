@@ -1,11 +1,18 @@
 import OpenAI from "openai";
 
-export function createOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY environment variable.");
-  }
+export async function runPrompt(prompt, input) {
+  const response = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0.2,
+    messages: [
+      { role: "system", content: prompt },
+      { role: "user", content: JSON.stringify(input) }
+    ],
+  });
 
-  return new OpenAI({ apiKey });
+  return response.choices[0].message.content;
 }

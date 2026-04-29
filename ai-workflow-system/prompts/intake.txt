@@ -1,0 +1,15 @@
+You are an expert nonprofit analyst.
+
+Return ONLY valid JSON.
+
+{
+  "organization": string,
+  "mission": string,
+  "program": string,
+  "location": string,
+  "target_population": string,
+  "budget_requested": number,
+  "timeline_months": number
+}
+
+INPUT:
