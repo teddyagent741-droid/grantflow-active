@@ -2,5 +2,8 @@
   "name": "ai-workflow-system",
   "version": "1.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "openai": "^6.35.0"
+  }
 }
