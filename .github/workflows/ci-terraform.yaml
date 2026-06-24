@@ -32,7 +32,7 @@ jobs:
         timeout-minutes: 5
         steps:
             - name: Checkout
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup OpenTofu
               uses: opentofu/setup-opentofu@v2
@@ -51,7 +51,7 @@ jobs:
         timeout-minutes: 5
         steps:
             - name: Checkout
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup OpenTofu
               uses: opentofu/setup-opentofu@v2
@@ -77,7 +77,7 @@ jobs:
         timeout-minutes: 5
         steps:
             - name: Checkout
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup TFLint
               uses: terraform-linters/setup-tflint@v6
